@@ -16,6 +16,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import org.springframework.http.HttpMethod;
 
 import java.nio.charset.StandardCharsets;
 
@@ -36,6 +37,11 @@ public class AuthenticationFilter implements GatewayFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+
+        if (request.getMethod() == HttpMethod.OPTIONS) {
+            log.info("OPTIONS request bypassing authentication filter.");
+            return chain.filter(exchange); // Pass it immediately to the next filter (CorsFilter)
+        }
 
         if (routerValidator.isSecured.test(request)) {
             HttpCookie authCookie = request.getCookies().getFirst(jwtCookieName);
