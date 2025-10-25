@@ -28,6 +28,30 @@ services:
       - app-network
     restart: unless-stopped
 
+  user-service:
+    build:
+      context: ../user-service
+      dockerfile: Dockerfile
+    env_file:
+      - ../user-service/.env
+    ports:
+      - "8082:8082"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  event-service:
+    build:
+      context: ../event-service
+      dockerfile: Dockerfile
+    env_file:
+      - ../event-service/.env
+    ports:
+      - "8083:8083"
+    networks:
+      - app-network
+    restart: unless-stopped
+
 networks:
   app-network:
     driver: bridge

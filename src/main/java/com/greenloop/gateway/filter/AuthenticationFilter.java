@@ -64,12 +64,14 @@ public class AuthenticationFilter implements GatewayFilter {
                 Claims claims = jwtUtil.extractAllClaims(token);
                 String userId = claims.getSubject();
                 String userRole = claims.get("role") != null ? String.valueOf(claims.get("role")) : "USER";
+                String userEmail = claims.get("email") != null ? String.valueOf(claims.get("email")) : "unknown";
 
                 log.info("Token validated for user: {} with role: {}", userId, userRole);
 
                 ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                         .header("X-User-ID", userId)
                         .header("X-User-Role", userRole)
+                        .header("X-User-Email", userEmail)
                         .build();
 
                 ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();

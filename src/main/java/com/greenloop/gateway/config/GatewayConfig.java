@@ -19,6 +19,12 @@ public class GatewayConfig {
         @Value("${auth.service.url}")
         private String authServiceUrl;
 
+        @Value("${user.service.url}")
+        private String userServiceUrl;
+
+        @Value("${user.service.url}")
+        private String eventServiceUrl;
+
         @Bean
         public RouteLocator routes(RouteLocatorBuilder builder) {
                 log.info("Configuring routes with auth service URL: {}", authServiceUrl);
@@ -30,6 +36,12 @@ public class GatewayConfig {
                                 .route("verify-service", r -> r.path("/api/verify/**")
                                                 .filters(f -> f.filter(filter))
                                                 .uri(authServiceUrl))
+                                .route("user-service", r -> r.path("/api/users/**")
+                                                .filters(f -> f.filter(filter))
+                                                .uri(userServiceUrl))
+                                .route("event-service", r -> r.path("/api/events/**")
+                                                .filters(f -> f.filter(filter))
+                                                .uri(eventServiceUrl))
                                 .build();
         }
 }

@@ -24,6 +24,7 @@ The Gateway service acts as the entry point for API requests. Its main responsib
 
   * `X-User-ID` — the user identifier from the JWT.
   * `X-User-Role` — the user role from the JWT.
+  * `X-User-Email` — the user email from the JWT.
 * Routes requests to the appropriate service (currently Auth Service).
 
 This ensures that downstream services do not need to handle authentication or extract user info — it’s centralized in the gateway.
