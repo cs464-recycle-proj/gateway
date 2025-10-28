@@ -8,7 +8,7 @@
 
 The Gateway service includes **Javadoc-generated API documentation** for all public classes and methods.
 
-- **Location:** [`docs/apidocs/index.html`](https://cs464-recycle-proj.github.io/gateway/)
+- **Location:** [`docs/apidocs/index.html`](https://cs464-recycle-proj.github.io/gateway/apidocs/index.html)
 - **Usage:** View endpoints, method signatures, and comments for developers integrating or contributing to the Gateway.
 - **Example:** Open directly in your browser:
 
