@@ -36,7 +36,7 @@ jobs:
         run: ./mvnw clean compile -B
 
       - name: Run tests
-        run: ./mvnw test -B
+        run: ./mvnw test -B -Dspring.profiles.active=test
 
       - name: Generate test coverage report
         run: ./mvnw jacoco:report
