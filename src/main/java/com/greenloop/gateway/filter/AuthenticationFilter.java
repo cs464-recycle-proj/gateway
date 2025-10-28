@@ -20,6 +20,38 @@ import org.springframework.http.HttpMethod;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Gateway filter that authenticates incoming requests using JWT tokens from
+ * cookies.
+ * 
+ * <p>
+ * This filter implements the authentication layer for the API gateway by:
+ * <ul>
+ * <li>Extracting JWT tokens from HTTP cookies</li>
+ * <li>Validating token signatures and expiration</li>
+ * <li>Extracting user claims (ID, role, email) from valid tokens</li>
+ * <li>Enriching downstream requests with user information headers</li>
+ * <li>Bypassing authentication for whitelisted public endpoints</li>
+ * </ul>
+ * 
+ * <p>
+ * The filter adds the following headers to authenticated requests:
+ * <ul>
+ * <li><b>X-User-ID</b>: The unique identifier of the authenticated user</li>
+ * <li><b>X-User-Role</b>: The role of the user (e.g., USER, ADMIN)</li>
+ * <li><b>X-User-Email</b>: The email address of the user</li>
+ * </ul>
+ * 
+ * <p>
+ * These headers enable downstream microservices to access user information
+ * without needing to validate JWT tokens themselves, centralizing
+ * authentication logic.
+ * 
+ * @author GreenLoop Team
+ * @version 1.0
+ * @see JwtUtil
+ * @see RouterValidator
+ */
 @RefreshScope
 @Component
 @Slf4j
@@ -34,6 +66,23 @@ public class AuthenticationFilter implements GatewayFilter {
     @Value("${jwt.cookie.name}")
     private String jwtCookieName;
 
+    /**
+     * Filters incoming requests to validate JWT authentication.
+     * 
+     * <p>
+     * This method implements the main authentication flow:
+     * <ol>
+     * <li>Bypasses OPTIONS requests for CORS preflight</li>
+     * <li>Checks if the endpoint requires authentication</li>
+     * <li>Extracts and validates JWT token from cookies</li>
+     * <li>Extracts user claims and enriches request headers</li>
+     * <li>Forwards authenticated request to downstream services</li>
+     * </ol>
+     * 
+     * @param exchange the current server exchange containing request and response
+     * @param chain    the filter chain for processing the request
+     * @return a Mono that completes when the request processing is done
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
@@ -55,6 +104,18 @@ public class AuthenticationFilter implements GatewayFilter {
 
             try {
                 jwtUtil.validateToken(token);
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                log.error("Token has expired for path: {}", request.getURI().getPath());
+                return this.onError(exchange, "Authorization token has expired", HttpStatus.UNAUTHORIZED);
+            } catch (io.jsonwebtoken.security.SignatureException e) {
+                log.error("Invalid token signature for path: {}", request.getURI().getPath());
+                return this.onError(exchange, "Invalid token signature", HttpStatus.UNAUTHORIZED);
+            } catch (io.jsonwebtoken.MalformedJwtException e) {
+                log.error("Malformed token for path: {}", request.getURI().getPath());
+                return this.onError(exchange, "Malformed authorization token", HttpStatus.UNAUTHORIZED);
+            } catch (IllegalArgumentException e) {
+                log.error("Token validation error: {}", e.getMessage());
+                return this.onError(exchange, e.getMessage(), HttpStatus.UNAUTHORIZED);
             } catch (Exception e) {
                 log.error("Error validating token: {}", e.getMessage());
                 return this.onError(exchange, "Authorization token is invalid", HttpStatus.UNAUTHORIZED);
@@ -85,6 +146,20 @@ public class AuthenticationFilter implements GatewayFilter {
         return chain.filter(exchange);
     }
 
+    /**
+     * Constructs an error response for authentication failures.
+     * 
+     * <p>
+     * Creates a JSON-formatted error response with the specified message and HTTP
+     * status.
+     * This method is called when authentication fails due to missing, invalid, or
+     * expired tokens.
+     * 
+     * @param exchange     the current server exchange
+     * @param errorMessage the error message to include in the response
+     * @param httpStatus   the HTTP status code to return
+     * @return a Mono that writes the error response to the client
+     */
     private Mono<Void> onError(ServerWebExchange exchange, String errorMessage, HttpStatus httpStatus) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(httpStatus);
