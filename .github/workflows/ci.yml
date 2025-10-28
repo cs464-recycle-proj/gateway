@@ -3,23 +3,13 @@ name: Gateway Service CI
 on:
   push:
     branches: [main]
-    paths:
-      - "gateway/**"
-      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "gateway/**"
-      - ".github/workflows/ci.yml"
 
 jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: .
 
     steps:
       - name: Checkout code
@@ -53,14 +43,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: gateway/target/surefire-reports/
+          path: target/surefire-reports/
 
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: gateway/target/site/jacoco/
+          path: target/site/jacoco/
 
       - name: Package application
         run: ./mvnw package -DskipTests -B
@@ -69,17 +59,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gateway-service-jar
-          path: gateway/target/*.jar
+          path: target/*.jar
           retention-days: 7
 
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
     needs: build-and-test
-
-    defaults:
-      run:
-        working-directory: gateway
 
     steps:
       - name: Checkout code
@@ -125,10 +111,6 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push'
 
-    defaults:
-      run:
-        working-directory: gateway
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -157,8 +139,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: gateway
-          file: gateway/Dockerfile
+          context: .
+          file: Dockerfile
           push: false
           load: true
           tags: greenloop-gateway:test
@@ -193,8 +175,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
         with:
-          context: gateway
-          file: gateway/Dockerfile
+          context: .
+          file: Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -229,7 +211,7 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: "gateway-service"
-          path: "gateway"
+          path: "."
           format: "HTML"
           args: >
             --failOnCVSS 7
