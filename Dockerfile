@@ -11,6 +11,9 @@ COPY mvnw .
 COPY .mvn ./.mvn
 COPY src ./src
 
+# Make mvnw executable
+RUN chmod +x mvnw
+
 # Build the application (skip tests for faster builds)
 RUN ./mvnw clean package -DskipTests
 
