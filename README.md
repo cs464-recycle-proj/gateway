@@ -140,6 +140,33 @@ To add a route, update the `routes()` method.
 * `CorsGlobalConfigTest` — CORS checks
 
 ---
+## 🤖 Continuous Integration
+
+This project uses a GitHub Actions workflow for Continuous Integration, triggered on every push and pull request to the `main` branch. The pipeline automates the complete build, test, and security analysis process.
+
+The pipeline is divided into several key stages:
+
+1.  **Build and Test:**
+    * Sets up JDK 21 and caches Maven dependencies.
+    * Compiles the application (`mvn compile`).
+    * Runs all unit tests (`mvn test`) and generates a JaCoCo coverage report.
+    * Uploads test and coverage reports as artifacts.
+    * Packages the application into a JAR file.
+
+2.  **Code Quality Analysis:**
+    * Runs **Checkstyle** and **SpotBugs** to enforce code standards and find potential bugs.
+    * On pushes to `main`, it performs a **SonarCloud** scan to track code quality, bugs, and vulnerabilities.
+
+3.  **Build Docker Image:**
+    * Builds the Docker image (`greenloop-gateway:test`).
+    * Runs a container from the image and performs a live health check (`curl`) to ensure it's operational.
+    * On pushes to `main`, it logs into Docker Hub and pushes the tagged image.
+
+4.  **Security Scanning:**
+    * Uses **Trivy** to scan the `greenloop-gateway:test` Docker image for operating system and application vulnerabilities.
+    * Uses **OWASP Dependency Check** to scan project dependencies for known vulnerabilities.
+    * Security reports are uploaded as artifacts, and Trivy results are posted to the GitHub Security tab.
+---
 
 ## 🔒 Security
 
