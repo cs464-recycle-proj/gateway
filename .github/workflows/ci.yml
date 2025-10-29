@@ -86,30 +86,11 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: Run Checkstyle
         run: ./mvnw checkstyle:check || true
 
       - name: Run SpotBugs
         run: ./mvnw spotbugs:check || true
-
-      - name: SonarCloud Scan
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=cs464-recycle-proj_gateway \
-            -Dsonar.organization=cs464-recycle-proj \
-            -Dsonar.host.url=https://sonarcloud.io
-        continue-on-error: true 
 
   build-docker:
     name: Build Docker Image

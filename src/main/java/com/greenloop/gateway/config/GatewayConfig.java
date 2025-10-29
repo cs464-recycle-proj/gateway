@@ -69,7 +69,6 @@ public class GatewayConfig {
          */
         @Bean
         public RouteLocator routes(RouteLocatorBuilder builder) {
-                log.info("Configuring routes with auth service URL: {}", authServiceUrl);
 
                 return builder.routes()
                                 .route("auth-service", r -> r.path("/api/auth/**")
