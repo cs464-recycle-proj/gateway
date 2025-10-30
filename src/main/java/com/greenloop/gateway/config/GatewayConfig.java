@@ -55,6 +55,9 @@ public class GatewayConfig {
         @Value("${event.service.url}")
         private String eventServiceUrl;
 
+        // @Value("${gamification.service.url}")
+        // private String gamificationServiceUrl;
+
         /**
          * Configures the route locator with mappings for all microservices.
          * 
@@ -71,10 +74,7 @@ public class GatewayConfig {
         public RouteLocator routes(RouteLocatorBuilder builder) {
 
                 return builder.routes()
-                                .route("auth-service", r -> r.path("/api/auth/**")
-                                                .filters(f -> f.filter(filter))
-                                                .uri(authServiceUrl))
-                                .route("verify-service", r -> r.path("/api/verify/**")
+                                .route("auth-service", r -> r.path("/api/auth/**", "/api/verify/**")
                                                 .filters(f -> f.filter(filter))
                                                 .uri(authServiceUrl))
                                 .route("user-service", r -> r.path("/api/users/**")
@@ -83,6 +83,12 @@ public class GatewayConfig {
                                 .route("event-service", r -> r.path("/api/events/**")
                                                 .filters(f -> f.filter(filter))
                                                 .uri(eventServiceUrl))
+                                // .route("gamification-service", r -> r.path(
+                                //                 "/gamification/**",
+                                //                 "/api/v1/admin/**",
+                                //                 "/api/v1/gamifcation/**")
+                                //                 .filters(f -> f.filter(filter))
+                                //                 .uri(gamificationServiceUrl))
                                 .build();
         }
 }

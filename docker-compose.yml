@@ -52,6 +52,18 @@ services:
       - app-network
     restart: unless-stopped
 
+  # gamification-service:
+  #   build:
+  #     context: ../gamification-service
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ../gamification-service/.env
+  #   ports:
+  #     - "8084:8084"
+  #   networks:
+  #     - app-network
+  #   restart: unless-stopped
+
 networks:
   app-network:
     driver: bridge
