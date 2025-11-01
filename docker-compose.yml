@@ -56,8 +56,6 @@ services:
   #   build:
   #     context: ../gamification-service
   #     dockerfile: Dockerfile
-  #   env_file:
-  #     - ../gamification-service/.env
   #   ports:
   #     - "8084:8084"
   #   networks:
