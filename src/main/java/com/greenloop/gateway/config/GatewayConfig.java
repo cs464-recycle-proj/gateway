@@ -72,6 +72,11 @@ public class GatewayConfig {
          */
         @Bean
         public RouteLocator routes(RouteLocatorBuilder builder) {
+                log.info("🚀 Configuring Gateway Routes:");
+                log.info("  - Auth Service URL: {}", authServiceUrl);
+                log.info("  - User Service URL: {}", userServiceUrl);
+                log.info("  - Event Service URL: {}", eventServiceUrl);
+                log.info("  - Gamification Service URL: {}", gamificationServiceUrl);
 
                 return builder.routes()
                                 .route("auth-service", r -> r.path("/api/auth/**", "/api/verify/**")
@@ -83,11 +88,40 @@ public class GatewayConfig {
                                 .route("event-service", r -> r.path("/api/events/**")
                                                 .filters(f -> f.filter(filter))
                                                 .uri(eventServiceUrl))
-                                .route("gamification-service", r -> r.path(
-                                                "/gamification/**",
-                                                "/api/v1/admin/**",
-                                                "/api/v1/gamifcation/**")
-                                                .filters(f -> f.filter(filter))
+                                .route("gamification-service", r -> r.path("/gamification/**", "/api/v1/gamification/**")
+                                                .filters(f -> f.filter(filter)
+                                                                .filter((exchange, chain) -> {
+                                                                        log.info("🎮 Gamification Route - Original URI: {}",
+                                                                                        exchange.getRequest().getURI());
+                                                                        log.info("🎮 Gamification Route - Path: {}",
+                                                                                        exchange.getRequest().getPath()
+                                                                                                        .value());
+                                                                        log.info("🎮 Gamification Route - Method: {}",
+                                                                                        exchange.getRequest().getMethod());
+                                                                        log.info("🎮 Gamification Route - Headers: {}",
+                                                                                        exchange.getRequest().getHeaders());
+                                                                        log.info("🎮 Gamification Route - Target Base URL: {}",
+                                                                                        gamificationServiceUrl);
+                                                                        log.info("🎮 Gamification Route - Full Target: {}{}",
+                                                                                        gamificationServiceUrl,
+                                                                                        exchange.getRequest().getPath()
+                                                                                                        .value());
+                                                                        
+                                                                        // Log the actual route attributes
+                                                                        exchange.getAttributes().forEach((key, value) -> {
+                                                                                if (key.toString().contains("gateway") || key.toString().contains("uri")) {
+                                                                                        log.info("🎮 Route Attribute: {} = {}", key, value);
+                                                                                }
+                                                                        });
+                                                                        
+                                                                        return chain.filter(exchange).doOnSuccess(v -> {
+                                                                                log.info("🎮 Gamification Response - Status: {}",
+                                                                                                exchange.getResponse()
+                                                                                                                .getStatusCode());
+                                                                                log.info("🎮 Gamification Response - Headers: {}",
+                                                                                                exchange.getResponse().getHeaders());
+                                                                        });
+                                                                }))
                                                 .uri(gamificationServiceUrl))
                                 .build();
         }
