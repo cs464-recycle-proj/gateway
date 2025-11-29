@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   actions: read
+  packages: write
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -74,10 +75,7 @@ jobs:
         with:
           version: 'v3.19.0'
 
-      - name: Add Bitnami Helm repository
-        run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo update
+      # Gateway doesn't need Bitnami repo (no PostgreSQL dependency)
 
       - name: Check for existing Helm operations
         run: |
@@ -130,21 +128,11 @@ jobs:
             repository: ${{ secrets.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}
             tag: "${{ github.sha }}"
           
-          postgresql:
-            auth:
-              password: "${{ secrets.POSTGRESQL_PASSWORD }}"
-          
           env:
-            PGPASSWORD: "${{ secrets.POSTGRESQL_PASSWORD }}"
-            RABBITMQ_USERNAME: "${{ secrets.RABBITMQ_USERNAME }}"
-            RABBITMQ_PASSWORD: "${{ secrets.RABBITMQ_PASSWORD }}"
+            JWT_SECRET: "${{ secrets.JWT_SECRET }}"
           EOF
 
-      - name: Build Helm dependencies
-        run: |
-          cd helm
-          helm dependency build
-          cd ..
+      # Gateway has no Helm dependencies (no database)
 
       - name: Deploy with Helm
         run: |
@@ -152,8 +140,6 @@ jobs:
             --namespace ${{ env.K8S_NAMESPACE }} \
             --values ./helm/values.yaml \
             --values secrets.yaml \
-            --set global.compatibility.openshift.adaptSecurityContext=disabled \
-            --set global.security.allowInsecureImages=true \
             --set podAnnotations."app\.kubernetes\.io/deploy-time"="$(date +%s)" \
             --force \
             --wait \
