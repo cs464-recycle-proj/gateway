@@ -22,18 +22,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      initContainers:
-        - name: wait-for-postgres
-          image: postgres:17-alpine
-          command: 
-            - sh
-            - -c
-            - |
-              until pg_isready -h {{ .Values.env.DB_HOST }} -p {{ .Values.env.DB_PORT }} -U {{ .Values.postgresql.auth.username }}; do
-                echo "Waiting for PostgreSQL at {{ .Values.env.DB_HOST }}:{{ .Values.env.DB_PORT }}..."
-                sleep 2
-              done
-              echo "PostgreSQL is ready!"
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -47,11 +35,6 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "auth-service.fullname" . }}-db-secret
-                  key: password
           livenessProbe:
             httpGet:
               path: /health
