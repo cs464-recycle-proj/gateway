@@ -52,15 +52,37 @@ services:
       - app-network
     restart: unless-stopped
 
-  # gamification-service:
-  #   build:
-  #     context: ../gamification-service
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8084:8084"
-  #   networks:
-  #     - app-network
-  #   restart: unless-stopped
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: greenloop-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  notification-service:
+      build:
+        context: ../notification-service
+        dockerfile: Dockerfile
+      env_file:
+        - ../notification-service/.env
+      command: python worker.py
+      depends_on:
+        rabbitmq:
+          condition: service_healthy
+      networks:
+        - app-network
+      restart: unless-stopped
 
 networks:
   app-network:
